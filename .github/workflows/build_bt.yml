@@ -36,7 +36,6 @@ jobs:
           cd kernel
           ./scripts/config --set-str CONFIG_LOCALVERSION "-g0401960bd8e9"
           ./scripts/config --disable CONFIG_LOCALVERSION_AUTO
-          ./scripts/config --disable CONFIG_DEBUG_INFO_BTF_MODULES
 
           ./scripts/config --module CONFIG_BT_HCIVHCI
           ./scripts/config --module CONFIG_BT_HCIBTUSB
@@ -74,6 +73,23 @@ jobs:
           for f in out_ko/*.ko; do
             echo "=== $f ==="
             modinfo "$f" | grep -E 'filename|vermagic|depends'
+            SZ=$(python3 -c '
+import struct, sys
+d=open(sys.argv[1],"rb").read()
+shoff,=struct.unpack_from("<Q",d,40)
+shent,shnum,_=struct.unpack_from("<HHH",d,58)
+for i in range(shnum):
+    off=shoff+i*shent
+    if struct.unpack_from("<I",d,off+4)[0]==2:
+        so,ss,sl=struct.unpack_from("<QQI",d,off+24)
+        stro,=struct.unpack_from("<Q",d,shoff+sl*shent+24)
+        for j in range(0,ss,24):
+            sn,_,_,_,_,sz=struct.unpack_from("<IBBHQQ",d,so+j)
+            if d[stro+sn:d.index(b"\x00",stro+sn)]==b"__this_module":
+                print(sz); sys.exit(0)
+' "$f")
+            echo "__this_module size: $SZ"
+            test "$SZ" -eq 960
           done
 
       - name: Upload BT modules artifact
