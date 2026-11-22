@@ -20,7 +20,7 @@ jobs:
       - name: Download AOSP Clang 14.0.7 (clang-r450784e)
         run: |
           mkdir -p clang
-          curl -fsSL "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android13-release/clang-r450784e.tar.gz" | tar -xz -C clang
+          curl -fsSL "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android14-release/clang-r450784e.tar.gz" | tar -xz -C clang
           ./clang/bin/clang --version
 
       - name: Clone AOSP GKI android13-5.15 kernel
